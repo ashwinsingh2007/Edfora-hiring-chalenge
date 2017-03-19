@@ -1,0 +1,440 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>Practice</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel='stylesheet' type='text/css' />
+        <style> 
+            input[type=text] {
+                width: 300px;
+                box-sizing: border-box;
+                border: 2px solid #ccc;
+                border-radius: 4px;
+                font-size: 16px;
+                background-color: white;
+                background-image: url('https://www.w3schools.com/howto/searchicon.png');
+                background-position: 10px 10px; 
+                background-repeat: no-repeat;
+                padding: 12px 20px 12px 40px;
+                -webkit-transition: width 0.4s ease-in-out;
+                transition: width 0.4s ease-in-out;
+            }
+
+            input[type=text]:focus {
+                width: 100%;
+            }
+        </style>
+        <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.1.0/css/font-awesome.min.css"/>
+        <link href="http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" rel="Stylesheet"/>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>        
+        <script src="http://code.jquery.com/ui/1.10.2/jquery-ui.js" ></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.3.0/mustache.min.js"></script>
+        <script src="http://code.jquery.com/jquery-migrate-3.0.0.js"></script>
+        
+        <script type="text/html" id="test">
+            {{#.}}
+        <div class="container" style="width:100%">
+            <a class="pull-left" href="{{url}}"  target="_blank">
+                <div class="well">
+                    <div class="media">
+
+                        <div class="media-body">
+                            <h4 class="media-heading">{{title}}</h4>
+                            <p class="text-right">By {{author}}</p>
+                            <p></p>
+                            <ul class="list-inline list-unstyled">
+
+                                <li>
+                                    <i class="glyphicon glyphicon-plus-sign"></i> {{num_points}} point(s) by {{author}}</span>
+                                </li>
+                                <li>|</li>
+                                <li><span><i class="glyphicon glyphicon-calendar"></i> {{created_at}} </span></li>
+                                <li>|</li>
+                                <span><i class="glyphicon glyphicon-comment"></i> {{num_comments}} comments</span>
+
+                                <li>|</li>
+                                <li>
+                                    <!-- Use Font Awesome http://fortawesome.github.io/Font-Awesome/ -->
+                                    <span><i class="fa fa-facebook-square"></i></span>
+                                    <span><i class="fa fa-twitter-square"></i></span>
+                                    <span><i class="fa fa-google-plus-square"></i></span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {{/.}}
+    </script>
+    <script>
+
+    </script>
+    <script type="text/javascript">
+        var items = [];
+        var renderItems = [];
+        var wordlist = [];
+        $(document).ready(function () {
+            blockUI();
+            $.getJSON("http://starlord.hackerearth.com/edfora/hackernews", function (data) {
+                var index = 0;
+                $.each(data, function (key, val) {
+                    if (index == 0){
+
+                    }
+                    else{
+                        items.push(val);
+                    }
+                    index++;
+                });
+                for (var index = 0; index < items.length; index++) {
+                    wordlist.push(items[index].title);
+                }
+                for (var index = 0; index < 10; index++) {
+                    renderItems.push(items[index]);
+                }
+                renderMustach(renderItems);
+            });
+            $('#Sort').find('a').click(function (e) {
+                e.preventDefault();
+                var param = $(this).attr("href").replace("#", "");
+                var concept = $(this).text();
+                $('.search-panel span#Sort_concept').text(concept);
+                $('.input-group #Sort_Param').val(param);
+            });
+            $('#OrderBy').find('a').click(function (e) {
+                e.preventDefault();
+                var param = $(this).attr("href").replace("#", "");
+                var concept = $(this).text();
+                $('.search-panel span#OrderBy_concept').text(concept);
+                $('.input-group #OrderBy_Param').val(param);
+            });
+            $("#search").autocomplete({
+                source: function (req, responseFn) {
+                    var re = $.ui.autocomplete.escapeRegex(req.term);
+                    var matcher = new RegExp("^" + re, "i");
+                    var a = $.grep(wordlist, function (item, index) {
+                        return matcher.test(item);
+                    });
+                    responseFn(a);
+                }
+            });
+
+
+        });
+        function renderMustach(items)
+        {
+            var output = $("#output");
+            var template = $("#test").html();
+            html = Mustache.render(template, items);
+            output.html(html);
+            unblockUI();
+            
+        }
+        //search function
+        function searchByName()
+        {
+            blockUI();
+            var itemsCopy = [];
+            var searchItem = $("#search").val();
+            console.log(searchItem);
+            for (var index = 0; index < items.length; index++)
+            {
+                if (items[index].title.indexOf(searchItem) > -1)
+                {
+                    itemsCopy.push(items[index]);
+                }
+                if (items[index].author.indexOf(searchItem) > -1)
+                {
+                    itemsCopy.push(items[index]);
+                }
+            }
+
+            renderMustach(itemsCopy)
+        }
+        //Sorting functions for date / time
+        function sortJson(byKey, orderBy)
+        {
+            blockUI();
+            var ItemsCopy = renderItems;
+            if (byKey == 'By Date/Time')
+            {
+
+                for (var indexI = 0; indexI < ItemsCopy.length; indexI++) {
+                    for (var indexJ = indexI; indexJ < ItemsCopy.length; indexJ++) {
+                        var d1 = Date.parse(ItemsCopy[indexI].created_at.split(" ")[0]);
+                        var d2 = Date.parse(ItemsCopy[indexJ].created_at.split(" ")[0]);
+                        if (orderBy == '>')
+                        {
+                            if (d1 > d2) {
+                                var temp = ItemsCopy[indexI];
+                                ItemsCopy[indexI] = ItemsCopy[indexJ]
+                                ItemsCopy[indexJ] = temp;
+                            }
+                        }
+                        else if (orderBy == '<')
+                        {
+                            if (d1 < d2) {
+                                var temp = ItemsCopy[indexI];
+                                ItemsCopy[indexI] = ItemsCopy[indexJ]
+                                ItemsCopy[indexJ] = temp;
+                            }
+
+                        }
+
+                    }
+                }
+                for (var indexI = 0; indexI < ItemsCopy.length; indexI++) {
+                    for (var indexJ = indexI; indexJ < ItemsCopy.length; indexJ++) {
+                        var d1 = Date.parse(ItemsCopy[indexI].created_at.split(" ")[0]);
+                        var d2 = Date.parse(ItemsCopy[indexJ].created_at.split(" ")[0]);
+                        if (d1 == d2) {
+                            var tH1 = ItemsCopy[indexI].created_at.split(" ")[1].split(":")[0];
+                            var tH2 = ItemsCopy[indexJ].created_at.split(" ")[1].split(":")[0];
+                            if (orderBy == '>')
+                            {
+                                if (tH1 > tH2)
+                                {
+
+                                    var temp = ItemsCopy[indexI];
+                                    ItemsCopy[indexI] = ItemsCopy[indexJ]
+                                    ItemsCopy[indexJ] = temp;
+                                }
+                            }
+                            else if (orderBy == '<')
+                            {
+                                if (tH1 < tH2)
+                                {
+
+                                    var temp = ItemsCopy[indexI];
+                                    ItemsCopy[indexI] = ItemsCopy[indexJ]
+                                    ItemsCopy[indexJ] = temp;
+                                }
+                            }
+
+                            if (tH1 == tH2)
+                            {
+                                var tM1 = ItemsCopy[indexI].created_at.split(" ")[1].split(":")[1];
+                                var tM2 = ItemsCopy[indexJ].created_at.split(" ")[1].split(":")[1];
+                                if (orderBy == '>')
+                                {
+                                    if (tM1 > tM2)
+                                    {
+                                        console.log(tM1, tM2)
+                                        var temp = ItemsCopy[indexI];
+                                        ItemsCopy[indexI] = ItemsCopy[indexJ]
+                                        ItemsCopy[indexJ] = temp;
+                                    }
+                                }
+                                else if (orderBy == '<')
+                                {
+                                    if (tM1 < tM2)
+                                    {
+                                        console.log(tM1, tM2)
+                                        var temp = ItemsCopy[indexI];
+                                        ItemsCopy[indexI] = ItemsCopy[indexJ]
+                                        ItemsCopy[indexJ] = temp;
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+                }
+            }
+            else if (byKey == 'By Points')
+            {
+                for (var indexI = 0; indexI < ItemsCopy.length; indexI++) {
+                    for (var indexJ = indexI; indexJ < ItemsCopy.length; indexJ++) {
+                        var P1 = ItemsCopy[indexI].num_points;
+                        var P2 = ItemsCopy[indexJ].num_points;
+                        if (orderBy == '>')
+                        {
+                            if (P1 > P2)
+                            {
+                                var temp = ItemsCopy[indexI];
+                                ItemsCopy[indexI] = ItemsCopy[indexJ]
+                                ItemsCopy[indexJ] = temp;
+                            }
+                        }
+                        else if (orderBy == '<')
+                        {
+                            if (P1 < P2)
+                            {
+                                var temp = ItemsCopy[indexI];
+                                ItemsCopy[indexI] = ItemsCopy[indexJ]
+                                ItemsCopy[indexJ] = temp;
+                            }
+                        }
+
+                    }
+                }
+            }
+            renderMustach(ItemsCopy);
+        }
+        function InitializeSort()
+        {
+            var byKey = $("#Sort_concept").text();
+            var OrderBy = $("#OrderBy_concept").text();
+            if(byKey !="Sort Items" && OrderBy !="Order by" ){
+                if (OrderBy == "Ascending"){
+                    sortJson(byKey, '>')
+                }
+                else if (OrderBy == "Descending"){
+                    sortJson(byKey, '<')
+                }
+                showAlert("Sorting Results "+byKey+ " in "+ OrderBy+ " Order");
+            }
+        }
+        function reRenderUI(indexI)
+        {           
+            blockUI();
+            renderItems = [];
+            indexI = indexI * 10;
+            if (indexI <= items.length)
+            {
+                for (var index = indexI; index <= indexI + 10; index++) {
+                    if (!!items[index]) {
+                        renderItems.push(items[index]);
+                    }
+                }
+                renderMustach(renderItems);
+                showAlert("Showing Result from "+indexI + " - " + eval(indexI+10));
+            }
+        }
+        function showAlert(message)
+        {
+           $("#showingResults").show();
+           $("#showingResults").html(message);
+           $("#showingResults").fadeOut(3000); 
+        }
+        function blockUI()
+        {
+            $("#MainContent").hide();
+            $("#throbber").show();
+        }
+        function unblockUI()
+        {
+            
+            $("#throbber").hide();
+            $("#MainContent").show();
+            
+        }
+    </script>
+</head>
+<body>
+    <nav class="navbar navbar-default navbar-fixed-top">
+        <div class="container">
+            <div class="col-md-3">
+                <a class="navbar-brand" style="height: auto;">
+                    <img class="img-responsive" src="http://www.edfora.com/images/logo.png"/>
+                </a>  
+            </div>
+            <div class="col-md-9">
+                <h3>Hacker News</h3>
+                <p>Best Hacker News Articles</p>
+            </div>
+        </div>
+    </nav>
+    <div class="container" id="throbber" style="display:none;text-align: center;margin-top: 100px;">
+        <img src="http://vis.stanford.edu/projects/immens/demo/faa/resources/loading-blue.gif" style="width:100px" />
+    </div>
+    <div class="container" id="MainContent">
+        <div class="col-md-12" style="width:100%;margin-top: 120px;margin-bottom: 20px;">
+            <input id="search" type="text" name="search" placeholder="Search (by Name) " onkeydown = "if (event.keyCode == 13) {
+                        searchByName()
+                    }">
+            <button id="searchButton" class="btn btn-primary"><i class="glyphicon glyphicon-filter" onclick="searchByName()"></i></button>
+        </div>
+        <div class="container">
+            <div class="col-md-12" >
+                <div id="showingResults" class="alert alert-info alert-dismissible" role="alert" style="display:none"></div>
+                </div>
+            </div>
+        
+        <div class="row">
+            <div class="col-md-3" style="float:right;margin-bottom: 20px">
+                <div class="input-group">
+                    <div class="input-group-btn search-panel" id="Sort">
+                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                            <span id="Sort_concept">Sort Items</span> <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu" role="menu">
+                            <li><a href="#Date/Time">By Date/Time</a></li>
+                            <li><a href="#By Points">By Points</a></li>
+
+                        </ul>
+                    </div>
+                    <input type="hidden" name="search_param" value="all" id="Sort_Param"> 
+                    <div class="input-group-btn search-panel" id="OrderBy">
+                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                            <span id="OrderBy_concept">Order by</span> <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu" role="menu">
+                            <li><a href="#contains">Ascending</a></li>
+                            <li><a href="#its_equal">Descending</a></li>
+
+                        </ul>
+                    </div>
+                    <input type="hidden" name="search_param" value="all" id="OrderBy_param"> 
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" type="button" onclick="InitializeSort()"><span class="glyphicon glyphicon-filter"></span>Sort</button>
+                    </span>
+                </div>
+            </div>
+            <div class="col-md-12" id="output">
+
+            </div>
+            <div class="col-md-12" style="text-align:center">
+                <ul class="pagination">
+                    <li><a href="#" onclick="reRenderUI('0')">0</a></li>
+                    <li><a href="#" onclick="reRenderUI('1')">1</a></li>
+                    <li><a href="#" onclick="reRenderUI('2')">2</a></li>
+                    <li><a href="#" onclick="reRenderUI('3')">3</a></li>
+                    <li><a href="#" onclick="reRenderUI('4')">4</a></li>
+                    <li><a href="#" onclick="reRenderUI('5')">5</a></li>
+                    <li><a href="#" onclick="reRenderUI('6')">6</a></li>
+                    <li><a href="#" onclick="reRenderUI('7')">7</a></li>
+                    <li><a href="#" onclick="reRenderUI('8')">8</a></li>
+                    <li><a href="#" onclick="reRenderUI('9')">9</a></li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+    <footer style="padding: 20px;
+    background: rgba(158, 158, 158, 0.14)">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4" style="text-align: center">
+                    <span class="copyright">Developed by Ashwani Kumar</span>
+                </div>
+                <div class="col-md-4" style="text-align: center">
+                    <ul class="list-inline social-buttons">
+                        <li><a href="https://github.com/ashwinsingh2007"><i class="fa fa-github"></i></a>
+                        </li>
+                        <li><a href="https://www.linkedin.com/in/ashwani-kumar-97465186/"><i class="fa fa-linkedin"></i></a>
+                        </li>
+                        <li><a href="https://www.facebook.com/legend.ashwini07"><i class="fa fa-facebook"></i></a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-4" style="text-align: center">
+                    <span class="copyright">More Works</span>
+                    <ul class="list-inline social-buttons">
+                        <li><a href="http://www.geeksacademy.org">GeeksAcademy.org</a>
+                        </li>                        
+                    </ul>
+                </div>
+                
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
